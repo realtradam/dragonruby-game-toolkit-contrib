@@ -67,7 +67,7 @@ def tick args
                                g: 0,
                                b: 200,
                                a: 255,
-                               font: "manaspc.ttf" }.label
+                               font: "manaspc.ttf" }.label!
 
   # Primitives can hold anything, and can be given a label in the following forms
   args.outputs.primitives << [690 + 150, 330 - 80, "Custom font (.primitives Array)", 0, 1, 125, 0, 200, 255, "manaspc.ttf" ].label
@@ -81,7 +81,7 @@ def tick args
                                g: 0,
                                b: 200,
                                a: 255,
-                               font: "manaspc.ttf" }.label
+                               font: "manaspc.ttf" }.label!
 end
 
 def tick_instructions args, text, y = 715

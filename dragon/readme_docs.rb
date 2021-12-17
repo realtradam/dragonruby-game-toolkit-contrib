@@ -36,8 +36,6 @@ to get fancy you can provide a ~lambda~ to filter documentation:
 #+begin_src
   docs_search { |entry| (entry.include? "Array") && (!entry.include? "Enumerable") }
 #+end_src
-
-[[docs_search.gif]]
 S
     end
 
@@ -67,20 +65,25 @@ Reply with:
 I am a Dragon Rider.
 #+end_quote
 
-* Watch Some Intro Videos
+* Intro Videos
 
-Each video is only 20 minutes and all of them will fit into a lunch
-break. So please watch them:
+Here are some videos to help you get the lay of the land.
+
+** Quick Api Tour
 
 1. Beginner Introduction to DragonRuby Game Toolkit: [[https://youtu.be/ixw7TJhU08E]]
-2. Intermediate Introduction to Ruby Syntax: [[https://youtu.be/HG-XRZ5Ppgc]]
-3. Intermediate Introduction to Arrays in Ruby: [[https://youtu.be/N72sEYFRqfo]]
 
-The second and third videos are not required if you are proficient
-with Ruby, but *definitely* watch the first one.
+** If You Are Completely New to Ruby and Programming
 
-You may also want to try this free course provided at
-[[http://dragonruby.school]].
+1. Intermediate Introduction to Ruby Syntax: [[https://youtu.be/HG-XRZ5Ppgc]]
+2. Intermediate Introduction to Arrays in Ruby: [[https://youtu.be/N72sEYFRqfo]]
+3. You may also want to try this free course provided at [[http://dragonruby.school]].
+
+** If You Have Game Dev Experience
+
+1. Building Tetris - Part 1: [[https://youtu.be/xZMwRSbC4rY]]
+2. Building Tetris - Part 2: [[https://youtu.be/C3LLzDUDgz4]]
+3. Low Res Game Jam Tutorial: [[https://youtu.be/pCI90ukKCME]]
 
 * Getting Started Tutorial
 
@@ -430,7 +433,7 @@ Console type: ~$wizards.ios.start~ and you will be guided through the
 deployment process.
 
 To deploy to Android, you need to have an Android emulator/device, and
-a environment that is able to run Android SDK. ~dragonruby-publish~
+an environment that is able to run Android SDK. ~dragonruby-publish~
 will create an APK for you. From there, you can sign the APK and
 install it to your device. The signing and installation procedure
 varies from OS to OS. Here's an example of what the command might look
@@ -453,7 +456,7 @@ The following tenants of DragonRuby are what set us apart from other
 game engines. Given that Game Toolkit is a relatively new engine,
 there are definitely features that are missing. So having a big check
 list of "all the cool things" is not this engine's forte. This is
-compensated with a strong commitment to the following principals.
+compensated with a strong commitment to the following principles.
 
 ** Challenge The Status Quo
 
@@ -482,10 +485,10 @@ overwhelms beginners who are new to the engine or programming in general.
 DragonRuby's philosophy is to provide multiple options across the "make it
 fast" vs "make it right" spectrum, with incremental/intuitive
 transitions between the options provided. A concrete example of this philosophy
-would be render primitives: the spectrum of options allows renderable constructs take
-the form of tuples/arrays (easy to pickup, simple, and fast to code/prototype with),
+would be render primitives: the spectrum of options allows renderable constructs that
+take the form of tuples/arrays (easy to pickup, simple, and fast to code/prototype with),
 hashes (a little more work, but gives you the ability to add additional properties),
-open and string entities (more work than hashes, but yields cleaner apis),
+open and strict entities (more work than hashes, but yields cleaner apis),
 and finally - if you really need full power/flexibility in rendering - classes
 (which take the most amount of code and programming knowledge to create).
 
@@ -656,10 +659,14 @@ You can represent a sprite as a ~Hash~:
       flip_vertically: false,
       flip_horizontally: false,
       angle_anchor_x: 0.5,
-      angle_anchor_y: 1.0
+      angle_anchor_y: 1.0,
+      blendmode_enum: 1
     }
   end
 #+end_src
+
+The ~blendmode_enum~ value can be set to ~0~ (no blending), ~1~ (alpha blending),
+~2~ (additive blending), ~3~ (modulo blending), ~4~ (multiply blending).
 
 You can represent a sprite as an ~object~:
 
@@ -670,7 +677,7 @@ You can represent a sprite as an ~object~:
                   :source_x, :source_y, :source_w, :source_h,
                   :tile_x, :tile_y, :tile_w, :tile_h,
                   :flip_horizontally, :flip_vertically,
-                  :angle_anchor_x, :angle_anchor_y
+                  :angle_anchor_x, :angle_anchor_y, :blendmode_enum
 
     def primitive_marker
       :sprite
@@ -760,16 +767,17 @@ You can add additional metadata about your game within a label, which requires y
 #+begin_src
   def tick args
     args.outputs.labels << {
-      x:              200,
-      y:              550,
-      text:           "dragonruby",
-      size_enum:      2,
-      alignment_enum: 1,
-      r:              155,
-      g:              50,
-      b:              50,
-      a:              255,
-      font:           "fonts/manaspc.ttf",
+      x:                       200,
+      y:                       550,
+      text:                    "dragonruby",
+      size_enum:               2,
+      alignment_enum:          1,
+      r:                       155,
+      g:                       50,
+      b:                       50,
+      a:                       255,
+      font:                    "fonts/manaspc.ttf",
+      vertical_alignment_enum: 0, # 0 is bottom, 1 is middle, 2 is top
       # You can add any properties you like (this will be ignored/won't cause errors)
       game_data_one:  "Something",
       game_data_two: {
@@ -799,6 +807,21 @@ You can get the render size of any string using ~args.gtk.calcstringbox~.
       # This string uses Ruby's string interpolation literal: \#{}
       "'some string' has width: \#{w}, and height: \#{h}."
     ]
+  end
+#+end_src
+
+** Rendering Labels With New Line Characters And Wrapping
+
+You can use a strategy like the following to create multiple labels from a String.
+
+#+begin_src ruby
+  def tick args
+    long_string = "Lorem ipsum dolor sit amet, consectetur adipiscing elitteger dolor velit, ultricies vitae libero vel, aliquam imperdiet enim."
+    max_character_length = 30
+    long_strings_split = args.string.wrapped_lines long_string, max_character_length
+    args.outputs.labels << long_strings_split.map_with_index do |s, i|
+      { x: 10, y: 600 - (i * 20), text: s }
+    end
   end
 #+end_src
 S
@@ -1031,7 +1054,7 @@ The elevator pitch is:
 DragonRuby is a Multilevel Cross-platform Runtime. The "multiple levels"
 within the runtime allows us to target platforms no other Ruby can
 target: PC, Mac, Linux, Raspberry Pi, WASM, iOS, Android, Nintendo
-Switch, PS4, Xbox, and Scadia.
+Switch, PS4, Xbox, and Stadia.
 
 **** What does Multilevel Cross-platform mean?
 
@@ -1109,7 +1132,7 @@ file called ~repl.rb~ and put it in ~mygame/app/repl.rb~:
 
 - If you use the `repl` method, the code will be executed and the DragonRuby Console will automatically open so you can see the results (on Mac and Linux, the results will also be printed to the terminal).
 
-- All ~puts~ statements will also be saved to ~logs/log.txt~. So if you want to stay in your editor and not look at the terminal, or the DragonRuby Console, you can ~tail~ this file.
+- All ~puts~ statements will also be saved to ~logs/puts.txt~. So if you want to stay in your editor and not look at the terminal, or the DragonRuby Console, you can ~tail~ this file.
 
 4. To ignore code in ~repl.rb~, instead of commenting it out, prefix ~repl~ with the letter ~x~ and it'll be ignored.
 
@@ -1145,7 +1168,7 @@ challenges in creating something that is compatible.
 You can use DragonRuby's replay capabilities to troubleshoot:
 
 1. DragonRuby is hot loaded which gives you a very fast feedback loop (if the game throws an exception, it's because of the code you just added).
-2. Use ~./dragonruby mygame --record~ to create a game play recording that you can use to find the exception (you can replay a recoding by executing ~./dragonruby mygame --replay last_replay.txt~ or through the DragonRuby Console using ~$gtk.recording.start_replay "last_replay.txt"~.
+2. Use ~./dragonruby mygame --record~ to create a game play recording that you can use to find the exception (you can replay a recording by executing ~./dragonruby mygame --replay last_replay.txt~ or through the DragonRuby Console using ~$gtk.recording.start_replay "last_replay.txt"~.
 3. DragonRuby also ships with a unit testing facility. You can invoke the following command to run a test: ~./dragonruby . --eval some_ruby_file.rb --no-tick~.
 4. Get into the habit of adding debugging facilities within the game itself. You can add drawing primitives to ~args.outputs.debug~ that will render on top of your game but will be ignored in a production release.
 5. Debugging something that runs at 60fps is (imo) not that helpful. The exception you are seeing could have been because of a change that occurred many frames ago.
@@ -1158,7 +1181,7 @@ Let's check the official source for the answer to this question:
 isrubydead.com: [[https://isrubydead.com/]].
 
 On a more serious note, Ruby's _quantity_ levels aren't what they used
-to be. And that's totally fine. Every one chases the new and shiny.
+to be. And that's totally fine. Everyone chases the new and shiny.
 
 What really matters is _quality/maturity_. Here is the latest (StackOverflow
 Survey sorted by highest paid developers)[https://insights.stackoverflow.com/survey/2019#top-paying-technologies].
@@ -1232,13 +1255,11 @@ questions asked.
 
 *** But still, you should offer a free version. So I can try it out and see if I like it.
 
-You can try our [web-based sandbox environment](). But it won't do the
-runtime justice. Or just come to our [Slack]() or [Discord]() channel
-and ask questions. We'd be happy to have a one on one video chat with
-you and show off all the cool stuff we're doing.
+You can try our web-based sandbox environment at [[http://fiddle.dragonruby.org]]. But it won't do the
+runtime justice. Or just come to our Discord Channel at [[http://discord.dragonruby.org]] and ask questions.
+We'd be happy to have a one on one video chat with you and show off all the cool stuff we're doing.
 
-Seriously just buy it. Get a refund if you don't like it. We make it
-stupid easy to do so.
+Seriously just buy it. Get a refund if you don't like it. We make it stupid easy to do so.
 
 *** I still think you should do a free version. Think of all people who would give it a shot.
 

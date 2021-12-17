@@ -13,7 +13,7 @@ module GTK
 
       error_message = <<-S
 * ERROR
-The GTK::DirectionalKeys module should only be included in objects that respond to the following api heirarchy:
+The GTK::DirectionalKeys module should only be included in objects that respond to the following api hierarchy:
 
 - (#{ directional_methods.join("|") })
 - key_held.(#{ directional_methods.join("|") })
@@ -68,6 +68,12 @@ S
       else
         return [lr, ud]
       end
+    end
+
+    def directional_angle
+      return nil unless directional_vector
+
+      Math.atan2(up_down, left_right).to_degrees
     end
 
     def method_missing m, *args

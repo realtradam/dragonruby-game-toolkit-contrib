@@ -605,7 +605,7 @@ def render_debug args
       text: text,
       size_enum: -1.5,
       r: 255, g: 255, b: 255
-    }.label
+    }.label!
   end
 
   args.outputs.debug << {
@@ -615,7 +615,7 @@ def render_debug args
     size_enum: -0.5,
     alignment_enum: 1,
     r: 255, g: 255, b: 255
-  }.label
+  }.label!
 end
 
 def snake_demo args

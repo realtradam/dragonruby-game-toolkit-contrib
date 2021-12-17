@@ -13,6 +13,35 @@ class Numeric
   alias_method :lte, :<=
   alias_method :__original_eq_eq__, :== unless Numeric.instance_methods.include? :__original_eq_eq__
 
+  def to_layout_row opts = {}
+    $layout.rect(row: self,
+                 col: opts.col || 0,
+                 w:   opts.w || 0,
+                 h:   opts.h || 0).y
+  end
+
+  def to_layout_col opts = {}
+    $layout.rect(row: 0,
+                 col: self,
+                 w:   opts.w || 0,
+                 h:   opts.h || 0).x
+  end
+
+  def to_layout_w
+    $layout.rect(row: 0, col: 0, w: self, h: 1).w
+  end
+
+  def to_layout_h
+    $layout.rect(row: 0, col: 0, w: 1, h: self).h
+  end
+
+  def to_layout_row_from_bottom opts = {}
+    ($layout.row_max_index - self).to_layout_row opts
+  end
+
+  def to_layout_col_from_right opts = {}
+    ($layout.col_max_index - self).to_layout_col opts
+  end
 
   # Converts a numeric value representing seconds into frames.
   #
@@ -28,8 +57,24 @@ class Numeric
     self / 2.0
   end
 
+  def third
+    self / 3.0
+  end
+
+  def quarter
+    self / 4.0
+  end
+
   def to_byte
     clamp(0, 255).to_i
+  end
+
+  def clamp *opts
+    min = (opts.at 0)
+    max = (opts.at 1)
+    return min if min && self < min
+    return max if max && self > max
+    return self
   end
 
   def clamp_wrap min, max
@@ -256,7 +301,7 @@ S
     self * Math::PI.fdiv(180)
   end
 
-  # Converts a number representing an angle in radians to degress.
+  # Converts a number representing an angle in radians to degrees.
   #
   # @gtk
   def to_degrees
@@ -273,21 +318,21 @@ S
     GTK::Geometry.to_square(self, x, y, anchor_x, anchor_y)
   end
 
-  # Returns a normal vector for a number that represents an angle in degress.
+  # Returns a normal vector for a number that represents an angle in degrees.
   #
   # @gtk
   def vector max_value = 1
     [vector_x(max_value), vector_y(max_value)]
   end
 
-  # Returns the y component of a normal vector for a number that represents an angle in degress.
+  # Returns the y component of a normal vector for a number that represents an angle in degrees.
   #
   # @gtk
   def vector_y max_value = 1
     max_value * Math.sin(self.to_radians)
   end
 
-  # Returns the x component of a normal vector for a number that represents an angle in degress.
+  # Returns the x component of a normal vector for a number that represents an angle in degrees.
   #
   # @gtk
   def vector_x max_value = 1
@@ -312,6 +357,18 @@ S
 
   def zmod? n
     (self % n) == 0
+  end
+
+  def multiply n
+    self * n
+  end
+
+  def fmult n
+    self * n.to_f
+  end
+
+  def imult n
+    (self * n).to_i
   end
 
   def mult n
@@ -415,32 +472,6 @@ S
     (0..self).to_a
   end
 
-  def >= other
-    return false if !other
-    return gte other
-  end
-
-  def > other
-    return false if !other
-    return gt other
-  end
-
-  def <= other
-    return false if !other
-    return lte other
-  end
-
-  def < other
-    return false if !other
-    return gt other
-  end
-
-  def == other
-    return true if __original_eq_eq__ other
-    return __original_eq_eq__ other.entity_id if other.is_a? OpenEntity
-    return false
-  end
-
   # @gtk
   def map
     unless block_given?
@@ -526,34 +557,6 @@ The object above is not a Numeric.
 S
   end
 
-  def - other
-    return nil unless other
-    super
-  rescue Exception => e
-    __raise_arithmetic_exception__ other, :-, e
-  end
-
-  def + other
-    return nil unless other
-    super
-  rescue Exception => e
-    __raise_arithmetic_exception__ other, :+, e
-  end
-
-  def * other
-    return nil unless other
-    super
-  rescue Exception => e
-    __raise_arithmetic_exception__ other, :*, e
-  end
-
-  def / other
-    return nil unless other
-    super
-  rescue Exception => e
-    __raise_arithmetic_exception__ other, :/, e
-  end
-
   def serialize
     self
   end
@@ -579,6 +582,10 @@ S
   def self.clamp n, min, max
     n.clamp min, max
   end
+
+  def mid? l, r
+    (between? l, r) || (between? r, l)
+  end
 end
 
 class Fixnum
@@ -602,40 +609,6 @@ class Fixnum
   # @gtk
   def odd?
     return !even?
-  end
-
-  def + other
-    return nil unless other
-    super
-  rescue Exception => e
-    __raise_arithmetic_exception__ other, :+, e
-  end
-
-  def * other
-    return nil unless other
-    super
-  rescue Exception => e
-    __raise_arithmetic_exception__ other, :*, e
-  end
-
-  def / other
-    return nil unless other
-    super
-  rescue Exception => e
-    __raise_arithmetic_exception__ other, :/, e
-  end
-
-  def - other
-    return nil unless other
-    super
-  rescue Exception => e
-    __raise_arithmetic_exception__ other, :-, e
-  end
-
-  def == other
-    return true if __original_eq_eq__ other
-    return __original_eq_eq__ other.entity_id if other.is_a? GTK::OpenEntity
-    return false
   end
 
   # Returns `-1` if the number is less than `0`. `+1` if the number
@@ -693,34 +666,6 @@ class Float
   alias_method :__original_multiply__, :* unless Float.instance_methods.include? :__original_multiply__
   alias_method :__original_divide__,   :- unless Float.instance_methods.include? :__original_divide__
 
-  def - other
-    return nil unless other
-    super
-  rescue Exception => e
-    __raise_arithmetic_exception__ other, :-, e
-  end
-
-  def + other
-    return nil unless other
-    super
-  rescue Exception => e
-    __raise_arithmetic_exception__ other, :+, e
-  end
-
-  def * other
-    return nil unless other
-    super
-  rescue Exception => e
-    __raise_arithmetic_exception__ other, :*, e
-  end
-
-  def / other
-    return nil unless other
-    super
-  rescue Exception => e
-    __raise_arithmetic_exception__ other, :/, e
-  end
-
   def serialize
     self
   end
@@ -761,5 +706,9 @@ class Integer
 
   def nan?
     false
+  end
+
+  def center other
+    (self - other).abs.fdiv(2)
   end
 end

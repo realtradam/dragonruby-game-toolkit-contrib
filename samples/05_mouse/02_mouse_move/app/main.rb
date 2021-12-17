@@ -14,9 +14,11 @@
 
  - args.inputs.keyboard.key_down.KEY: Determines if a key is being held or pressed.
    Stores the frame the "down" event occurred.
+   For more information about the keyboard, go to mygame/documentation/06-keyboard.md.
 
  - args.outputs.sprites: An array. The values generate a sprite.
    The parameters are [X, Y, WIDTH, HEIGHT, PATH, ANGLE, ALPHA, RED, GREEN, BLUE]
+   For more information about sprites, go to mygame/documentation/05-sprites.md.
 
  - args.state.new_entity: Used when we want to create a new object, like a sprite or button.
    When we want to create a new object, we can declare it as a new entity and then define
@@ -194,7 +196,7 @@ class ProtectThePuppiesFromTheZombies
   def calc_kill_zombie
 
     # Find all zombies that intersect with the player. They are considered killed.
-    killed_this_frame = state.zombies.find_all { |z| z.sprite.intersect_rect? state.player_sprite }
+    killed_this_frame = state.zombies.find_all { |z| z.sprite && (z.sprite.intersect_rect? state.player_sprite) }
     state.zombies = state.zombies - killed_this_frame # remove newly killed zombies from zombies collection
     state.killed_zombies += killed_this_frame # add newly killed zombies to killed zombies
 

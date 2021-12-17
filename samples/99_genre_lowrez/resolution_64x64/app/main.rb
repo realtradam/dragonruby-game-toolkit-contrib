@@ -560,7 +560,7 @@ def render_debug args
         g: 128,
         b: 128,
         a: 80
-      }.line
+      }.line!
 
       args.outputs.static_debug << {
         x:  LOWREZ_X_OFFSET + (i * 10),
@@ -571,7 +571,7 @@ def render_debug args
         g: 128,
         b: 128,
         a: 80
-      }.line
+      }.line!
     end
   end
 
@@ -598,7 +598,7 @@ def render_debug args
       y: 720 - (i * 20),
       text: text,
       size_enum: -1.5
-    }.label
+    }.label!
   end
 
   args.outputs.debug << {
@@ -607,7 +607,7 @@ def render_debug args
     text: "INFO: dev mode is currently enabled. Comment out the invocation of ~render_debug~ within the ~tick~ method to hide the debug layer.",
     size_enum: -0.5,
     alignment_enum: 1
-  }.label
+  }.label!
 end
 
 $gtk.reset

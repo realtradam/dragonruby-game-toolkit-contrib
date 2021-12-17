@@ -5,6 +5,22 @@
 
 module GTK
   module Geometry
+    def self.rotate_point point, angle, around = nil
+      s = Math.sin angle.to_radians
+      c = Math.cos angle.to_radians
+      px = point.x
+      py = point.y
+      cx = 0
+      cy = 0
+      if around
+        cx = around.x
+        cy = around.y
+      end
+
+      point.merge(x: ((px - cx) * c - (py - cy) * s) + cx,
+                  y: ((px - cx) * s + (py - cy) * c) + cy)
+    end
+
     # Returns f(t) for a cubic Bezier curve.
     def self.cubic_bezier t, a, b, c, d
       s  = 1 - t
@@ -86,7 +102,7 @@ module GTK
     rescue Exception => e
       raise e, <<-S
 * ERROR:
-center_inside_rect for self #{self} and other_rect #{other_rect}. Failed with exception #{e}.
+center_inside_rect for self #{self} and other_rect #{other_rect}.\n#{e}.
 S
     end
 
@@ -103,7 +119,7 @@ S
     rescue Exception => e
       raise e, <<-S
 * ERROR:
-center_inside_rect_x for self #{self} and other_rect #{other_rect}. Failed with exception #{e}.
+center_inside_rect_x for self #{self} and other_rect #{other_rect}.\n#{e}.
 S
     end
 
@@ -120,7 +136,7 @@ S
     rescue Exception => e
       raise e, <<-S
 * ERROR:
-center_inside_rect_y for self #{self} and other_rect #{other_rect}. Failed with exception #{e}.
+center_inside_rect_y for self #{self} and other_rect #{other_rect}.\n#{e}.
 S
     end
 
@@ -129,7 +145,7 @@ S
     end
 
 
-    # Returns a primitive that is anchored/repositioned based off its retangle.
+    # Returns a primitive that is anchored/repositioned based off its rectangle.
     # @gtk
     def anchor_rect anchor_x, anchor_y
       current_w = self.w
@@ -172,8 +188,16 @@ S
     end
 
     # @gtk
-    def self.line_y_intercept line
-      line.y - line_slope(line) * line.x
+    def self.line_y_intercept line, replace_infinity: nil
+      line.y - line_slope(line, replace_infinity: replace_infinity) * line.x
+    rescue Exception => e
+raise <<-S
+* ERROR: ~Geometry::line_y_intercept~
+The following exception was thrown for line: #{line}
+#{e}
+
+Consider passing in ~replace_infinity: VALUE~ to handle for vertical lines.
+S
     end
 
     # @gtk
@@ -249,14 +273,22 @@ S
     end
 
     # @gtk
-    def self.line_intersect line_one, line_two
-      m1 = line_slope(line_one)
-      m2 = line_slope(line_two)
-      b1 = line_y_intercept(line_one)
-      b2 = line_y_intercept(line_two)
+    def self.line_intersect line_one, line_two, replace_infinity: nil
+      m1 = line_slope(line_one, replace_infinity: replace_infinity)
+      m2 = line_slope(line_two, replace_infinity: replace_infinity)
+      b1 = line_y_intercept(line_one, replace_infinity: replace_infinity)
+      b2 = line_y_intercept(line_two, replace_infinity: replace_infinity)
       x = (b1 - b2) / (m2 - m1)
       y = (-b2.fdiv(m2) + b1.fdiv(m1)).fdiv(1.fdiv(m1) - 1.fdiv(m2))
       [x, y]
+    rescue Exception => e
+raise <<-S
+* ERROR: ~Geometry::line_intersect~
+The following exception was thrown for line_one: #{line_one}, line_two: #{line_two}
+#{e}
+
+Consider passing in ~replace_infinity: VALUE~ to handle for vertical lines.
+S
     end
 
     def self.contract_intersect_rect?
@@ -265,10 +297,10 @@ S
 
     # @gtk
     def self.intersect_rect? rect_one, rect_two, tolerance = 0.1
-      return false if rect_one.right - tolerance < rect_two.left + tolerance
-      return false if rect_one.left + tolerance > rect_two.right - tolerance
-      return false if rect_one.top - tolerance < rect_two.bottom + tolerance
-      return false if rect_one.bottom + tolerance > rect_two.top - tolerance
+      return false if ((rect_one.x + rect_one.w) - tolerance) < (rect_two.x + tolerance)
+      return false if (rect_one.x + tolerance) > ((rect_two.x + rect_two.w) - tolerance)
+      return false if ((rect_one.y + rect_one.h) - tolerance) < (rect_two.y + tolerance)
+      return false if (rect_one.y + tolerance) > ((rect_two.y + rect_two.h) - tolerance)
       return true
     rescue Exception => e
       context_help_rect_one = (rect_one.__help_contract_implementation contract_intersect_rect?)[:not_implemented_methods]
@@ -296,6 +328,7 @@ S
 - rect_one: #{rect_one}
 - rect_two: #{rect_two}
 #{context_help}
+\n#{e}
 S
     end
 
@@ -306,14 +339,14 @@ S
       y = y.shift_down(size * anchor_y)
       [x, y, size, size]
     rescue Exception => e
-      raise e, ":to_square failed for size: #{size} x: #{x} y: #{y} anchor_x: #{anchor_x} anchor_y: #{anchor_y}."
+      raise e, ":to_square failed for size: #{size} x: #{x} y: #{y} anchor_x: #{anchor_x} anchor_y: #{anchor_y}.\n#{e}"
     end
 
     # @gtk
     def self.distance point_one, point_two
       Math.sqrt((point_two.x - point_one.x)**2 + (point_two.y - point_one.y)**2)
     rescue Exception => e
-      raise e, ":distance failed for point_one: #{point_one} point_two #{point_two}."
+      raise e, ":distance failed for point_one: #{point_one} point_two #{point_two}.\n#{e}"
     end
 
     # @gtk
@@ -322,31 +355,34 @@ S
       d_x = end_point.x - start_point.x
       Math::PI.+(Math.atan2(d_y, d_x)).to_degrees
     rescue Exception => e
-      raise e, ":angle_from failed for start_point: #{start_point} end_point: #{end_point}."
+      raise e, ":angle_from failed for start_point: #{start_point} end_point: #{end_point}.\n#{e}"
     end
 
     # @gtk
     def self.angle_to start_point, end_point
       angle_from end_point, start_point
     rescue Exception => e
-      raise e, ":angle_to failed for start_point: #{start_point} end_point: #{end_point}."
+      raise e, ":angle_to failed for start_point: #{start_point} end_point: #{end_point}.\n#{e}"
     end
 
     # @gtk
     def self.point_inside_circle? point, circle_center_point, radius
       (point.x - circle_center_point.x) ** 2 + (point.y - circle_center_point.y) ** 2 < radius ** 2
     rescue Exception => e
-      raise e, ":point_inside_circle? failed for point: #{point} circle_center_point: #{circle_center_point} radius: #{radius}"
+      raise e, ":point_inside_circle? failed for point: #{point} circle_center_point: #{circle_center_point} radius: #{radius}.\n#{e}"
     end
 
     # @gtk
     def self.inside_rect? inner_rect, outer_rect, tolerance = 0.0
+      return nil if !inner_rect
+      return nil if !outer_rect
+
       inner_rect.x     + tolerance >= outer_rect.x     - tolerance &&
-      inner_rect.right - tolerance <= outer_rect.right + tolerance &&
+      (inner_rect.x + inner_rect.w) - tolerance <= (outer_rect.x + outer_rect.w) + tolerance &&
       inner_rect.y     + tolerance >= outer_rect.y     - tolerance &&
-      inner_rect.top   - tolerance <= outer_rect.top   + tolerance
+      (inner_rect.y + inner_rect.h) - tolerance <= (outer_rect.y + outer_rect.h) + tolerance
     rescue Exception => e
-      raise e, ":inside_rect? failed for inner_rect: #{inner_rect} outer_rect: #{outer_rect}."
+      raise e, ":inside_rect? failed for inner_rect: #{inner_rect} outer_rect: #{outer_rect}.\n#{e}"
     end
 
     # @gtk
@@ -381,7 +417,7 @@ S
         return rect
       end
     rescue Exception => e
-      raise e, ":scale_rect_extended failed for rect: #{rect} percentage_x: #{percentage_x} percentage_y: #{percentage_y} anchors_x: #{anchor_x} anchor_y: #{anchor_y}."
+      raise e, ":scale_rect_extended failed for rect: #{rect} percentage_x: #{percentage_x} percentage_y: #{percentage_y} anchors_x: #{anchor_x} anchor_y: #{anchor_y}.\n#{e}"
     end
 
     # @gtk
@@ -395,7 +431,21 @@ S
                                    anchor_x: anchor_x,
                                    anchor_y: anchor_y
     rescue Exception => e
-      raise e, ":scale_rect failed for rect: #{rect} percentage: #{percentage} anchors [#{anchor_x} (x), #{anchor_y} (y)]."
+      raise e, ":scale_rect failed for rect: #{rect} percentage: #{percentage} anchors [#{anchor_x} (x), #{anchor_y} (y)].\n#{e}"
+    end
+
+    def self.rect_to_line rect
+      l = rect.to_hash.line
+      l.merge(x2: l.x + l.w - 1,
+              y2: l.y + l.h)
+    end
+
+    def self.rect_center_point rect
+      { x: rect.x + rect.w.half, y: rect.y + rect.h.half }
+    end
+
+    def rect_center_point
+      Geometry.rect_center_point self
     end
   end # module Geometry
 end # module GTK
